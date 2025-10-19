@@ -1,6 +1,6 @@
 # ⚖️ Legal SEO Content Generator
 
-An AI-powered Streamlit application that generates SEO-optimized legal content in German, specifically designed for law firms specializing in criminal law (Strafrecht).
+An AI-powered Streamlit application that generates SEO-optimized legal content in German, specifically designed for law firms specializing.
 
 ## Features
 
