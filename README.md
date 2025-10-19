@@ -1,95 +1,82 @@
+# ⚖️ Legal SEO Content Generator
 
-# 🧠 AI-Powered SEO Landing Page Generator
+An AI-powered Streamlit application that generates SEO-optimized legal content in German, specifically designed for law firms specializing in criminal law (Strafrecht).
 
-This project automates the creation of SEO-optimized landing pages for law firms using AI. It generates high-quality content based on a user-defined topic by leveraging OpenAI's GPT models and (soon) SEMrush for keyword analysis.
+## Features
 
----
+### 📝 Article Generator
+- **Automated Content Generation**: Creates comprehensive legal articles on any criminal law topic
+- **SEO Keyword Research**: Integrates with SEMrush API to find relevant keywords
+- **Legal Verification**: Automatically checks and corrects legal information for accuracy
+- **Humanization**: Reduces AI detection while maintaining legal precision
+- **Multi-stage Pipeline**:
+  1. Outline generation
+  2. Content creation
+  3. Legal verification
+  4. SEO optimization
+  5. Humanization
 
-## 🚀 Project Goals
+### 🖼️ Image Generator
+- Generate professional legal-themed images using DALL-E 3
+- Two styles: Realistic and Iconic illustrations
+- Customizable size and quality options
 
-- Generate SEO-optimized content for legal topics
-- Match or exceed the quality of top-ranking Google pages
-- Produce human-like, undetectable AI content
-- Automate content formatting, image generation, and export
-- Provide an easy-to-use frontend for law firms or admins
+## Prerequisites
 
----
+- Python 3.9+
+- API Keys:
+  - **Anthropic Claude API** (for content generation)
+  - **OpenAI API** (for image generation)
+  - **SEMrush API** (for keyword research)
 
-## ✅ Current Features (MVP Stage 1)
+## Installation
 
-1. **Keyword Generation**
-   - Input: A topic (e.g., *"Scheidung Anwalt Berlin"*)
-   - Output: Top 10 localized keywords (via GPT, SEMrush planned)
-
-2. **Outline Generator**
-   - Creates a structured H2/H3 outline for the landing page
-   - Uses keywords to ensure SEO alignment
-
-3. **Section Content Generator**
-   - Iterates over each outline point
-   - Writes persuasive, SEO-rich content (100–150 words/section)
-
-4. **PDF/Word Export** *(planned)*
-   - Compiles generated content into a downloadable document
-
----
-
-## 🧰 Tech Stack
-
-- **Language**: Python
-- **AI API**: OpenAI GPT-4o
-- **Environment**: `dotenv`, local dev via VS Code
-- **Framework (planned)**: Streamlit or Flask for UI
-- **Other integrations (planned)**:
-  - SEMrush (API)
-  - DALL·E (image generation)
-  - AI content detection tool (e.g., GPTZero)
-
----
-
-## 🧩 Folder Structure
-
-```
-├── main.py               # Main pipeline (runs end-to-end)
-├── ai_utils.py           # Functions: keyword, outline, section generation
-├── .env                  # OpenAI API key
-├── requirements.txt      # Python dependencies
-└── output/               # (planned) Stores exported documents
+1. Clone the repository:
+```bash
+git clone https://github.com/Hamza2314/seo-content-generator.git
+cd seo-content-generator
 ```
 
----
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-## 🛠️ Next Development Steps
+3. Create a `.env` file with your API keys:
+```env
+CLAUDE_API_KEY=your_anthropic_api_key
+OPENAI_API_KEY=your_openai_api_key
+SEMRUSH_API_KEY=your_semrush_api_key
+```
 
-1. **🔑 Integrate SEMrush**
-   - Replace GPT keyword generator with SEMrush keyword API
-   - Accept access credentials from client
+## Usage
 
-2. **📃 Section Generator Upgrade**
-   - Add paragraph style, anchor link hints, and optional references
-   - Add optional PDF/URL input for tone/structure mirroring
+### Run Locally
+```bash
+streamlit run app.py
+```
 
-3. **🧪 AI Detection + Rewriting**
-   - Integrate AI detection (simulated or real)
-   - Rewrite flagged content iteratively
 
-4. **🖼 Image Generator**
-   - Use DALL·E or similar to embed 1–2 visuals per topic
+## Tech Stack
 
-5. **📤 Export & Delivery**
-   - Output content as DOCX and PDF
-   - Save structured file with H2/H3 sections and embedded images
+- **Frontend**: Streamlit
+- **AI Models**: 
+  - Anthropic Claude Sonnet 4.5 (content generation)
+  - OpenAI DALL-E 3 (image generation)
+- **SEO**: SEMrush API
+- **Language**: Python 3.9+
 
-6. **🖥 Streamlit Interface**
-   - Input: Topic, tone example (optional), custom keywords (optional)
-   - Output: Display + Download SEO-optimized landing page
+## Notes
 
-7. **📦 Deployment**
-   - Initial version hosted externally (Streamlit Cloud or VPS)
-   - Optional migration to Hostinger server if needed
+- All generated content is in German
+- Optimized for criminal law topics (Strafrecht)
+- Articles go through 5-stage quality pipeline
+- Legal information is automatically verified for accuracy
 
----
+## License
 
-## 📄 License
+Private project - All rights reserved
 
-To be defined after client agreement (likely proprietary under work contract).
+## Author
+
+Hamza - [GitHub](https://github.com/Hamza2314)
