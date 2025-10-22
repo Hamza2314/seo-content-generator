@@ -4,6 +4,28 @@ from generator import get_seo_keywords_for_topic
 from image_generator import generate_image_prompt, generate_article_image_realistic, generate_article_image_iconic
 from pdf_generator import generate_pdf, generate_html
 
+# =======================
+# SIMPLE PASSWORD GATE
+# =======================
+def check_password():
+    def password_entered():
+        if st.session_state["password"] == st.secrets["app_password"]:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # don't store password in session
+        else:
+            st.session_state["password_correct"] = False
+
+    if "password_correct" not in st.session_state:
+        # First run, ask for password
+        st.text_input("Enter password:", type="password", key="password", on_change=password_entered)
+        st.stop()
+    elif not st.session_state["password_correct"]:
+        st.text_input("Enter password:", type="password", key="password", on_change=password_entered)
+        st.error("❌ Wrong password.")
+        st.stop()
+
+check_password()
+
 # ============================================================================
 # PAGE CONFIGURATION
 # ============================================================================
