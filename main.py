@@ -317,8 +317,7 @@ WAS DU TUN SOLLST:
 - Keywords natürlich in Überschriften und Fließtext einbauen (KEIN Keyword-Stuffing!)
 - Überschriftenstruktur verbessern: # für H1, ## für H2, ### für H3
 - Finde 1-2 Stellen, wo Aufzählungspunkte (•) die Lesbarkeit verbessern
-- Mache extrem wichtige Informationen BOLD mit **text** (z.B. Strafmaße, kritische Fristen, Paragraphen, Höchststrafen)
-  Beispiel: "**§ 29 BtMG**", "**Freiheitsstrafe bis zu 5 Jahren**", "**binnen 2 Wochen**" - nur für wirklich wichtige rechtliche Fakten
+- ALLE Paragraphen (§§), Strafmaße, kritische Fristen und wichtige Zahlen MÜSSEN BOLD sein mit **text**, und nutze Bolddruck für relevante Fakten, nicht für normalen Text
 - WICHTIG: Redundanzen und Wiederholungen aktiv entfernen
 
 VERMEIDE:
