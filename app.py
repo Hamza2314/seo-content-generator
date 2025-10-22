@@ -8,15 +8,16 @@ from pdf_generator import generate_pdf, generate_html
 # SIMPLE PASSWORD GATE
 # =======================
 def check_password():
+    PASSWORD = "Christian"  # define it here
+
     def password_entered():
-        if st.session_state["password"] == st.secrets["app_password"]:
+        if st.session_state["password"] == PASSWORD:
             st.session_state["password_correct"] = True
-            del st.session_state["password"]  # don't store password in session
+            del st.session_state["password"]  # don't keep password in session
         else:
             st.session_state["password_correct"] = False
 
     if "password_correct" not in st.session_state:
-        # First run, ask for password
         st.text_input("Enter password:", type="password", key="password", on_change=password_entered)
         st.stop()
     elif not st.session_state["password_correct"]:
@@ -25,6 +26,7 @@ def check_password():
         st.stop()
 
 check_password()
+
 
 # ============================================================================
 # PAGE CONFIGURATION
