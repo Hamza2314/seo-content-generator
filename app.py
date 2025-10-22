@@ -2,6 +2,7 @@ import streamlit as st
 import main
 from generator import get_seo_keywords_for_topic
 from image_generator import generate_image_prompt, generate_article_image_realistic, generate_article_image_iconic
+from pdf_generator import generate_pdf, generate_html
 
 # ============================================================================
 # PAGE CONFIGURATION
@@ -64,22 +65,44 @@ def generate_complete_article(topic, target_length=None):
     add_log(f"📝 Content-Thema: '{topic}'")
     
     # ------------------------------------------------------------------------
-    # STEP 1: OUTLINE GENERATION
+    # STEP 1: OUTLINE (Use edited outline or generate new)
     # ------------------------------------------------------------------------
-    status.text("Schritt 1/5: Erstelle Gliederung...")
-    progress.progress(0.12)
     
-    try:
-        add_log("⏳ Generiere Gliederung...")
-        outline = main.generate_outline(topic)
+    # Check if we have an edited outline from the UI
+    if 'edited_outline' in st.session_state and st.session_state.edited_outline:
+        status.text("Schritt 1/5: Verwende bearbeitete Gliederung...")
+        progress.progress(0.12)
+        add_log("✅ Verwende bearbeitete Gliederung aus Editor")
+        outline = st.session_state.edited_outline
         st.session_state.outline = outline
-        add_log("✅ Gliederung erfolgreich erstellt")
         
-        with st.expander("📋 Zeige Gliederungs-Output"):
+        with st.expander("📋 Verwendete Gliederung"):
             st.markdown(outline)
         
         add_log(f"📊 Gliederung hat {len(outline.split('#'))} Hauptabschnitte")
         progress.progress(0.24)
+    else:
+        # Generate new outline if not already edited
+        status.text("Schritt 1/5: Erstelle Gliederung...")
+        progress.progress(0.12)
+        
+        try:
+            add_log("⏳ Generiere Gliederung...")
+            outline = main.generate_outline(topic)
+            st.session_state.outline = outline
+            add_log("✅ Gliederung erfolgreich erstellt")
+            
+            with st.expander("📋 Zeige Gliederungs-Output"):
+                st.markdown(outline)
+            
+            add_log(f"📊 Gliederung hat {len(outline.split('#'))} Hauptabschnitte")
+            progress.progress(0.24)
+        except Exception as e:
+            add_log(f"❌ Fehler bei Gliederungserstellung: {str(e)}")
+            st.error(f"Fehler: {str(e)}")
+            return
+    
+    try:
         
         # ------------------------------------------------------------------------
         # STEP 2: CONTENT GENERATION
@@ -262,48 +285,40 @@ def display_complete_article():
     # ------------------------------------------------------------------------
     # DOWNLOAD OPTIONS
     # ------------------------------------------------------------------------
-    st.subheader("📥 Download-Optionen")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    # Download humanized version
-    with col1:
-        if 'humanized_article' in st.session_state:
-            st.download_button(
-                label="👨🏼 Finaler Artikel (humanisiert)",
-                data=st.session_state.humanized_article,
-                file_name=f"{st.session_state.topic.replace(' ', '_')}_final.md",
-                mime="text/markdown",
-                use_container_width=True
-            )
-    
-    # Download SEO version
-    with col2:
-        if 'seo_optimized_article' in st.session_state:
-            st.download_button(
-                label="📝 SEO-Version herunterladen",
-                data=st.session_state.seo_optimized_article,
-                file_name=f"{st.session_state.topic.replace(' ', '_')}_seo.md",
-                mime="text/markdown",
-                use_container_width=True
-            )
-    
-    # Download complete package
-    with col3:
-        if 'outline' in st.session_state and 'humanized_article' in st.session_state:
-            complete_package = f"# Gliederung\n\n{st.session_state.outline}\n\n---\n\n# Finaler Artikel (humanisiert)\n\n{st.session_state.humanized_article}"
-            if 'seo_keywords' in st.session_state:
-                keywords_text = "\n".join([f"• {kw}" for kw in st.session_state.seo_keywords])
-                complete_package = f"# SEO-Keywords\n\n{keywords_text}\n\n---\n\n{complete_package}"
+
+    st.subheader("📥 Download")
+
+    if 'humanized_article' in st.session_state:
+        col1, col2 = st.columns(2)
+        
+        # PDF Download
+        with col1:
+            pdf_bytes = generate_pdf(st.session_state.humanized_article)
+            
+            if pdf_bytes:
+                st.download_button(
+                    label="📄 Als PDF herunterladen",
+                    data=pdf_bytes,
+                    file_name=f"{st.session_state.topic.replace(' ', '_')}_final.pdf",
+                    mime="application/pdf",
+                    use_container_width=True,
+                    type="primary"
+                )
+            else:
+                st.error("❌ PDF fehlgeschlagen")
+        
+        # HTML Download
+        with col2:
+            html_content = generate_html(st.session_state.humanized_article)
             
             st.download_button(
-                label="📦 Komplettpaket herunterladen",
-                data=complete_package,
-                file_name=f"{st.session_state.topic.replace(' ', '_')}_komplett.md",
-                mime="text/markdown",
-                use_container_width=True
+                label="🌐 Als HTML herunterladen",
+                data=html_content,
+                file_name=f"{st.session_state.topic.replace(' ', '_')}_final.html",
+                mime="text/html",
+                use_container_width=True,
+                type="secondary"
             )
-
 # ============================================================================
 # SIDEBAR STATUS & INFO
 # ============================================================================
@@ -388,7 +403,7 @@ def main_app():
         # Remember user settings
         use_different_keyword_topic = st.checkbox(
             "Anderes Thema für Keyword-Recherche verwenden",
-            help="Hilfreich wenn das Hauptthema zu spezifisch ist",
+            help="Hilfreich wenn das Hauptthema zu spezifisch für SEMrush ist",
             key="use_different_keyword_topic"
         )
 
@@ -522,18 +537,71 @@ def main_app():
                 st.session_state.article_length = article_length
 
 
-        # Main generation button
-        if st.button("SEO-optimierten Artikel generieren", type="primary", use_container_width=True):
+        # --------------------------------------------------------------------
+        # OUTLINE GENERATION AND EDITING
+        # --------------------------------------------------------------------
+        st.divider()
+        
+        # Button 1: Generate Outline
+        if st.button("📋 Gliederung generieren", type="primary", use_container_width=True, key="gen_outline"):
+            with st.spinner("Generiere Gliederung..."):
+                outline = main.generate_outline(topic)
+                st.session_state.generated_outline = outline
+                st.session_state.edited_outline = outline  # Set this immediately so button becomes enabled
+        
+        # Button 2: Generate Article (disabled until outline exists)
+        outline_exists = 'edited_outline' in st.session_state and st.session_state.edited_outline
+        if st.button("✅ SEO-optimierten Artikel generieren", type="primary", use_container_width=True, disabled=not outline_exists):
             generate_complete_article(
                 topic, 
                 article_length if use_length_control else None,
             )
+        
+        st.divider()
+        
+        # Display and allow editing of outline (only if generated)
+        if 'generated_outline' in st.session_state:
+            st.info("💡 Sie können die Gliederung jetzt bearbeiten, bevor der vollständige Artikel generiert wird.")
+            
+            edited_outline = st.text_area(
+                "Gliederung bearbeiten:",
+                value=st.session_state.get('edited_outline', st.session_state.generated_outline),
+                height=400,
+                key="outline_editor",
+                help="Bearbeiten Sie die Gliederung nach Ihren Wünschen. Verwenden Sie # für H1 und ## für H2 Überschriften."
+            )
+            
+            # Save edited outline to session state
+            st.session_state.edited_outline = edited_outline
+            
+            # Preview of outline structure
+            with st.expander("👁️ Gliederungs-Vorschau"):
+                st.markdown(edited_outline)
 
-        # Display generated article
+    
+            # Display generated article
         if 'humanized_article' in st.session_state:
             display_complete_article()
-    
-    
+            
+            # ===== ADD THIS ENTIRE BLOCK HERE =====
+            st.divider()
+            
+            # Re-humanize section
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.info("💡 Noch zu viel KI-Erkennung? Führe eine tiefere Humanisierung durch.")
+            with col2:
+                if st.button("🔄 Tiefer humanisieren", use_container_width=True):
+                    with st.spinner("Führe tiefere Humanisierung durch..."):
+                        deep_humanized = main.humanize_content(
+                            st.session_state.humanized_article,
+                            st.session_state.topic,
+                            deep_mode=True
+                        )
+                        st.session_state.humanized_article = deep_humanized
+                        st.session_state.deep_humanized = True
+                        st.success("✅ Tiefere Humanisierung abgeschlossen!")
+                        st.rerun()
     # ========================================================================
     # TAB 2: IMAGE GENERATOR
     # ========================================================================

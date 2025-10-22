@@ -21,7 +21,7 @@ Return only the 5 suggestions, one per line, no numbering, no explanations.
         model="claude-sonnet-4-20250514",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=100,
-        temperature=0.5,
+        temperature=0.8,
     )
 
     image_prompt_suggestions = response.content[0].text.strip()
@@ -44,7 +44,7 @@ def generate_article_image_realistic(image_prompt, size="1024x1024", quality="st
     print(f"Generiere Bild für Prompt: '{image_prompt}' (Größe: {size}, Qualität: {quality})...")
     
     prompt = f"""
-Create a high-definition photograph of {image_prompt} on a plain background, 
+Create a high-definition photograph of "{image_prompt}" on a plain background, 
 focusing on the striking visual contrast and symbolic power of the image. 
 Use sharp clarity to highlight the object's key features and details.
 Employ strong lighting to emphasize the object as the sole, dominant subject, 

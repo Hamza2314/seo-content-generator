@@ -107,7 +107,7 @@ def generate_outline(topic):
     base_prompt = f"""
 Du bist ein erfahrener Anwalt und SEO-Experte. Erstelle eine vollständige Gliederung mit H1- und H2-Überschriften zu dem Thema "{topic}".
 
-Die Gliederung muss alle relevanten juristischen Aspekte enthalten, die ein Mandant wissen muss oder wonach er suchen könnte.
+Die Gliederung muss relevanten juristischen Aspekte enthalten, die ein Mandant wissen muss oder wonach er suchen könnte.
 Was würde ein Betroffener alles wissen wollen? Welche Fragen stellen Mandanten? 
 
 Die Gliederung soll NUR das juristische Thema behandeln. KEINE Abschnitte über Kontakt/Über uns...
@@ -240,65 +240,42 @@ Deine Aufgabe: Prüfe diesen rechtlichen Text zum Thema "{topic}" auf Fehler und
 TEXT:
 {content}
 
-KRITISCHE PRÜFPUNKTE - FINDE UND KORRIGIERE:
+KRITISCHE PRÜFPUNKTE FÜR "{topic}":
 
 1. PARAGRAPHEN & GESETZE:
-   - Falsche Paragraph-Nummern oder Gesetze (z.B. StGB statt BGB)
-   - Veraltete oder nicht existierende Paragraphen
-   - Falsche Zuordnungen (z.B. § 249 StGB bei nachträglicher Gewalt - das wäre § 252 oder § 223 ff.)
+   - Falsche oder nicht existierende Paragraphen
+   - Falsche Zuordnungen zum Thema "{topic}"
 
-2. RECHTLICHE DEFINITIONEN:
-   - Unvollständige Definitionen (z.B. "Zueignungsabsicht" ohne "Aneignungsabsicht" und "Enteignungsvorsatz")
+2. RECHTLICHE DEFINITIONEN ZU "{topic}":
+   - Unvollständige oder unpräzise Definitionen
    - Fehlende Tatbestandsmerkmale
-   - Unpräzise oder umgangssprachliche Formulierungen statt juristischer Fachbegriffe
 
-3. VERHÄLTNISSE ZWISCHEN DELIKTEN:
-   - Falsche Abgrenzungen zwischen ähnlichen Straftatbeständen
-   - Unklare oder falsche Konkurrenzverhältnisse (Spezialität, Subsidiarität)
-   - Verwechslung von verwandten Delikten
-
-4. STRAFMASSE & RECHTSFOLGEN:
-   - Falsche Mindest- oder Höchststrafen
+3. STRAFMASSE & RECHTSFOLGEN:
+   - Falsche Mindest- oder Höchststrafen bei "{topic}"
    - Fehlende Qualifikationen oder minder schwere Fälle
-   - Falsche Angaben zu Freiheits- oder Geldstrafen
 
-5. TATBESTANDSMERKMALE:
-   - Fehlende oder falsch beschriebene objektive Tatbestandsmerkmale
-   - Fehlende oder falsch beschriebene subjektive Tatbestandsmerkmale (Vorsatz, Fahrlässigkeit)
-   - Unvollständige Aufzählung relevanter Merkmale
+4. IRRELEVANTER INHALT:
+   - Entferne Abschnitte ohne direkten Bezug zu "{topic}"
+   - Streiche Wiederholungen
 
-6. IRRELEVANTER ODER ZU ALLGEMEINER INHALT:
-   - Entferne Abschnitte, die zu allgemein sind und bei jedem Delikt stehen könnten
-   - Entferne generische Verteidigungsstrategien ohne Bezug zum spezifischen Delikt
-   - Entferne Themen, die eine eigene Seite verdienen (z.B. allgemeine Rechtfertigungsgründe)
-   - Streiche Wiederholungen - konsolidiere ähnliche Informationen
-
-WENN DU UNSICHER BIST:
-- Entferne spekulative oder unsichere Aussagen
-- Streiche Abschnitte, bei denen du dir nicht sicher bist, ob sie korrekt sind
-- Vereinfache komplexe rechtliche Zusammenhänge, wenn du Zweifel hast
-- Lieber weniger Inhalt als falsche Informationen
-
-WIE DU KORRIGIEREN SOLLST:
-- Ändere Fehler DIREKT im Text, an der Stelle wo sie stehen
-- Ersetze falsches durch richtiges ODER entferne es komplett
-- KEINE Kommentare, Fußnoten oder Erklärungen hinzufügen
-- Falls keine Fehler vorhanden: Gib den Text unverändert zurück
+WENN UNSICHER → LÖSCHEN
+- Bei zweifelhafter Korrektheit → ENTFERNEN
+- Bei fehlendem Bezug zu "{topic}" → ENTFERNEN
+- Grundregel: Lieber löschen als Fehler stehen lassen
 
 NICHT ÄNDERN:
-- Stil, Tonalität, Struktur (außer bei rechtlichen Fehlern)
-- Überschriften oder Formatierung
-- Korrekte rechtliche Inhalte
+- Stil und Tonalität
+- Korrekte Inhalte zu "{topic}"
 
-Gib nur den korrigierten (oder gekürzten) Text zurück, ohne weitere Erklärungen:
+Gib nur den korrigierten Text zurück:
 """
     
     try:
         print("Starte rechtliche Prüfung (Streaming)...")
         with client.messages.stream(
             model="claude-sonnet-4-20250514",
-            max_tokens=20000,
-            temperature=0.2,  # Keep low for accuracy
+            max_tokens=30000,
+            temperature=0.3,
             messages=[{"role": "user", "content": prompt}]
         ) as stream:
             result = ""
@@ -313,12 +290,12 @@ Gib nur den korrigierten (oder gekürzten) Text zurück, ohne weitere Erklärung
         return content
 
 
-def rework_complete_content(original_content, topic, keywords):
+def rework_complete_content(corrected_content, topic, keywords):
     """Integrate SEO keywords into legally-correct content"""
     print(f"Starte SEO-Integration mit {len(keywords) if keywords else 0} Keywords...")
     
     if not keywords:
-        return original_content
+        return corrected_content
     
     # Add rate limiting delay
     time.sleep(3)
@@ -326,9 +303,9 @@ def rework_complete_content(original_content, topic, keywords):
     keywords_text = ", ".join(keywords)
     
     prompt = f"""
-Du bist SEO-Experte. Integriere Keywords in diesen KORREKTEN rechtlichen Text.
+Du bist SEO-Experte. Integriere Keywords NATÜRLICH in diesen KORREKTEN rechtlichen Text.
 
-KEYWORDS: {keywords_text}
+KEYWORDS für "{topic}": {keywords_text}
 
 WICHTIG - NICHT ÄNDERN:
 - Rechtliche Fakten
@@ -336,26 +313,33 @@ WICHTIG - NICHT ÄNDERN:
 - Strafmaße
 - Rechtsfolgen
 
-NUR ERLAUBT:
-- Keywords in Überschriften einbauen
-- Keywords natürlich in Fließtext einfügen
-- Überschriftenstruktur mit Markdown verbessern (# für H1, ## für H2, ### für H3)
-- Optional: ### Unterüberschriften hinzufügen, wo es die Struktur verbessert
-- Redundanzen entfernen
+WAS DU TUN SOLLST:
+- Keywords natürlich in Überschriften und Fließtext einbauen (KEIN Keyword-Stuffing!)
+- Überschriftenstruktur verbessern: # für H1, ## für H2, ### für H3
+- Finde 1-2 Stellen, wo Aufzählungspunkte (•) die Lesbarkeit verbessern
+- Mache extrem wichtige Informationen BOLD mit **text** (z.B. Strafmaße, kritische Fristen, Paragraphen, Höchststrafen)
+  Beispiel: "**§ 29 BtMG**", "**Freiheitsstrafe bis zu 5 Jahren**", "**binnen 2 Wochen**" - nur für wirklich wichtige rechtliche Fakten
+- WICHTIG: Redundanzen und Wiederholungen aktiv entfernen
+
+VERMEIDE:
+- Keyword-Stuffing (Keywords müssen natürlich wirken)
+- Wiederholte Informationen
+- Unnötige Redundanz
+- Zu viel Fettdruck (maximal 3-5 Stellen im gesamten Text)
 
 Der rechtliche Inhalt muss identisch bleiben!
 
 TEXT:
-{original_content}
+{corrected_content}
 
-Überarbeiteter Text mit integrierten Keywords:
+Gib NUR den überarbeiteten Text zurück, ohne Erklärungen:
 """
     
     try:
         with client.messages.stream(
             model="claude-sonnet-4-20250514",
-            max_tokens=20000,
-            temperature=0.6,
+            max_tokens=30000,
+            temperature=0.5,
             messages=[{"role": "user", "content": prompt}]
         ) as stream:
             result = ""
@@ -367,62 +351,78 @@ TEXT:
         
     except Exception as e:
         if "rate_limit" in str(e):
-            print("Rate limit erreicht, warte 60 Sekunden...")
+            print("Rate limit erreicht, warte 10 Sekunden...")
             time.sleep(10)
-            return rework_complete_content(original_content, topic, keywords)
+            return rework_complete_content(corrected_content, topic, keywords)
         else:
             print(f"[ERROR] SEO integration failed: {e}")
-            return original_content
-
-def humanize_content(content, topic):
+            return corrected_content
+        
+def humanize_content(content, topic, deep_mode=False):
     """Reduce AI detection while maintaining legal accuracy and readability"""
     
-    print("Humanisiere Text (reduziere KI-Erkennbarkeit)...")
+    print(f"Humanisiere Text {'(Deep Mode)' if deep_mode else ''}...")
+    
+    # Concise humanization guidelines
+    base_techniques = """
+Du bist ein professioneller Rechtstext-Autor. Überarbeite den Text, um natürlicher zu wirken.
+
+WIE DU SCHREIBEN SOLLST:
+- Sätze: 10-20 Wörter im Durchschnitt, gelegentlich länger
+- Aktive Stimme bevorzugen (90%)
+- Satzlängen variieren (kurz, mittel, lang mischen)
+- Einfache Verbindungen: 'und', 'aber', 'also', 'dann'
+- Konkrete Fakten nennen (Zahlen, Paragraphen, Fristen)
+- Professionell aber zugänglich bleiben
+- Unwichtige Redundanzen und Wiederholungen entfernen
+
+WAS DU VERMEIDEN MUSST:
+- Steife Übergänge: "Darüber hinaus", "Ferner", "Zudem", "Des Weiteren", "Im Wesentlichen", "Grundsätzlich"
+- Zu perfekte, gleichförmige Strukturen
+- Jeden Absatz mit Übergangswort beginnen
+- Übermäßig komplexe Verschachtelungen
+- Passiv-Konstruktionen wo möglich
+
+PROFESSIONELLE NATÜRLICHKEIT:
+- Variiere Satzanfänge
+- Gelegentliche kurze Einschübe (in Klammern oder mit Gedankenstrichen)
+- Balance zwischen Fachsprache und Verständlichkeit
+- Autoritativ aber nicht roboterhaft
+"""
+    
+    if deep_mode:
+        base_techniques += """
+
+TIEFE HUMANISIERUNG:
+- Noch stärkere Variation in Satzstruktur und -länge
+- Eliminiere alle verbliebenen KI-typischen Phrasen
+- Mehr natürliche Übergänge, weniger formale Konstruktionen
+"""
     
     prompt = f"""
-Deine Aufgabe: Überarbeite diesen Text, um KI-Erkennbarkeit zu reduzieren, OHNE rechtliche Inhalte zu ändern.
+Überarbeite diesen Rechtstext zum Thema "{topic}" für natürlichere Sprache.
 
 TEXT:
 {content}
 
-TECHNIKEN ZUR HUMANISIERUNG:
+{base_techniques}
 
-1. SATZSTRUKTUR VARIIEREN:
-   - Mische kurze (5-10 Wörter) und lange Sätze (20-30 Wörter)
-   - Vermeide gleichförmige Satzlängen
-   - Nutze gelegentlich Satzfragmente oder Gedankenstriche
+KRITISCH - NICHT ÄNDERN:
+- Rechtliche Fakten (Paragraphen, Strafmaße, Definitionen, Verfahren)
+- Fachbegriffe und juristische Terminologie
+- SEO-Keywords
+- Inhaltliche Aussagen
 
-2. NATÜRLICHE ÜBERGÄNGE:
-   - Ersetze steife Übergänge ("Darüber hinaus", "Ferner", "Zudem")
-   - Nutze natürlichere Verbindungen ("Wichtig ist auch...", "Ein weiterer Punkt...")
-   - Gelegentlich direkte Fragen an den Leser
+BLEIBE PROFESSIONELL: Dies ist ein Rechtstext für Mandanten. Fachlich korrekt, verständlich, aber niemals unprofessionell oder zu locker.
 
-3. TONALITÄT VARIIEREN:
-   - Wechsel zwischen sachlich-präzise und leicht umgangssprachlich
-   - Gelegentlich persönliche Ansprache verstärken
-   - Vermeide zu perfekte, "glatte" Formulierungen
-
-4. UNPERFEKTHEIT EINBAUEN:
-   - Gelegentliche Einschübe in Klammern
-   - Hin und wieder Gedankenstriche
-   - Natürliche Betonungen
-
-ABSOLUT VERBOTEN ZU ÄNDERN:
-- Paragraphen, Gesetze, Strafmaße
-- Rechtliche Definitionen oder Tatbestandsmerkmale
-- Faktische rechtliche Aussagen
-- SEO-Keywords (müssen erhalten bleiben)
-
-ZIEL: <30% KI-Erkennung bei gleichbleibender rechtlicher Korrektheit
-
-Gib nur den humanisierten Text zurück:
+Gib NUR den überarbeiteten Text zurück:
 """
     
     try:
         with client.messages.stream(
             model="claude-sonnet-4-20250514",
-            max_tokens=20000,
-            temperature=0.7,  # HIGHER for more variation
+            max_tokens=30000,
+            temperature=0.80 if deep_mode else 0.75,
             messages=[{"role": "user", "content": prompt}]
         ) as stream:
             result = ""
@@ -433,9 +433,14 @@ Gib nur den humanisierten Text zurück:
         return result.strip()
         
     except Exception as e:
-        print(f"[ERROR] Humanization failed: {e}")
-        return content  # Return original if fails
-
+        if "rate_limit" in str(e):
+            print("Rate limit erreicht, warte 10 Sekunden...")
+            time.sleep(10)
+            return humanize_content(content, topic, deep_mode)
+        else:
+            print(f"[ERROR] Humanization failed: {e}")
+            return content
+        
 if __name__ == "__main__":
     # Step 1: Topic Input & Reference Inputs
     topic, keyword_topic = get_topic_input()
