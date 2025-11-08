@@ -2,10 +2,12 @@ import os
 from dotenv import load_dotenv
 import requests
 import anthropic
+from pick_strongest_model import pick_strongest_model
 
 load_dotenv()
 SEMRUSH_API_KEY = os.getenv("SEMRUSH_API_KEY")
 client = anthropic.Anthropic(api_key=os.getenv("CLAUDE_API_KEY"))
+CLAUDE_MODEL = pick_strongest_model(client)
 
 # Cities to exclude from keyword results, KEEP: Hamburg, Frankfurt, München, Neumünster (client service regions)
 CITY_MODIFIERS = [
@@ -85,7 +87,7 @@ Goal: Get the 20 strongest, most descriptive grouped keywords that represent the
 
     try:
         response = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model=CLAUDE_MODEL,
             max_tokens=800,
             temperature=0.3,
             messages=[{"role": "user", "content": prompt}]

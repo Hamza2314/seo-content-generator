@@ -2,10 +2,12 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 import anthropic
+from pick_strongest_model import pick_strongest_model
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 claude = anthropic.Anthropic(api_key=os.getenv("CLAUDE_API_KEY"))
+CLAUDE_MODEL = pick_strongest_model(claude)
 
 def generate_image_prompt(topic):
     print(f"Generating image prompt suggestions for topic: '{topic}'...")
@@ -18,7 +20,7 @@ Return only the 5 suggestions, one per line, no numbering, no explanations.
 """
 
     response = claude.messages.create(
-        model="claude-sonnet-4-20250514",
+        model=CLAUDE_MODEL,
         messages=[{"role": "user", "content": prompt}],
         max_tokens=100,
         temperature=0.8,

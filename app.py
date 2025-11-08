@@ -1,31 +1,36 @@
 import streamlit as st
 import main
+import anthropic
+import os
 from generator import get_seo_keywords_for_topic
 from image_generator import generate_image_prompt, generate_article_image_realistic, generate_article_image_iconic
 from pdf_generator import generate_pdf, generate_html
-
+from pick_strongest_model import pick_strongest_model
+from dotenv import load_dotenv
+load_dotenv() 
+claude_client = anthropic.Anthropic(api_key=os.getenv("CLAUDE_API_KEY"))
 # =======================
 # SIMPLE PASSWORD GATE
 # =======================
-def check_password():
-    PASSWORD = "Christian"  # define it here
+# def check_password():
+#     PASSWORD = "Christian"  # define it here
 
-    def password_entered():
-        if st.session_state["password"] == PASSWORD:
-            st.session_state["password_correct"] = True
-            del st.session_state["password"]  # don't keep password in session
-        else:
-            st.session_state["password_correct"] = False
+#     def password_entered():
+#         if st.session_state["password"] == PASSWORD:
+#             st.session_state["password_correct"] = True
+#             del st.session_state["password"]  # don't keep password in session
+#         else:
+#             st.session_state["password_correct"] = False
 
-    if "password_correct" not in st.session_state:
-        st.text_input("Enter password:", type="password", key="password", on_change=password_entered)
-        st.stop()
-    elif not st.session_state["password_correct"]:
-        st.text_input("Enter password:", type="password", key="password", on_change=password_entered)
-        st.error("❌ Wrong password.")
-        st.stop()
+#     if "password_correct" not in st.session_state:
+#         st.text_input("Enter password:", type="password", key="password", on_change=password_entered)
+#         st.stop()
+#     elif not st.session_state["password_correct"]:
+#         st.text_input("Enter password:", type="password", key="password", on_change=password_entered)
+#         st.error("❌ Wrong password.")
+#         st.stop()
 
-check_password()
+# check_password()
 
 
 # ============================================================================
@@ -33,7 +38,7 @@ check_password()
 # ============================================================================
 st.set_page_config(
     page_title="Legal SEO Content Generator",
-    page_icon="⚖️",
+    page_icon="",
     layout="wide"
 )
 
@@ -53,7 +58,7 @@ def process_reference_info(ref_info_source, topic):
                 st.session_state.ref_info_processed = True
                 st.success("✅ Referenz-Information erfolgreich extrahiert!")
                 
-                with st.expander("📊 Extrahierte Rechtsinformationen anzeigen"):
+                with st.expander(" Extrahierte Rechtsinformationen anzeigen"):
                     st.write(info)
             else:
                 st.error("Fehler bei der Informationsextraktion.")
@@ -73,7 +78,7 @@ def generate_complete_article(topic, target_length=None):
     
     # Setup logging container
     with log_container:
-        st.subheader("📋 Generierungs-Log")
+        st.subheader(" Generierungs-Log")
         log_placeholder = st.empty()
         logs = []
     
@@ -86,7 +91,7 @@ def generate_complete_article(topic, target_length=None):
     
     # Start generation process
     add_log("🚀 Starte Artikel-Generierung...")
-    add_log(f"📝 Content-Thema: '{topic}'")
+    add_log(f" Content-Thema: '{topic}'")
     
     # ------------------------------------------------------------------------
     # STEP 1: OUTLINE (Use edited outline or generate new)
@@ -100,10 +105,10 @@ def generate_complete_article(topic, target_length=None):
         outline = st.session_state.edited_outline
         st.session_state.outline = outline
         
-        with st.expander("📋 Verwendete Gliederung"):
+        with st.expander(" Verwendete Gliederung"):
             st.markdown(outline)
         
-        add_log(f"📊 Gliederung hat {len(outline.split('#'))} Hauptabschnitte")
+        add_log(f" Gliederung hat {len(outline.split('#'))} Hauptabschnitte")
         progress.progress(0.24)
     else:
         # Generate new outline if not already edited
@@ -116,10 +121,10 @@ def generate_complete_article(topic, target_length=None):
             st.session_state.outline = outline
             add_log("✅ Gliederung erfolgreich erstellt")
             
-            with st.expander("📋 Zeige Gliederungs-Output"):
+            with st.expander(" Zeige Gliederungs-Output"):
                 st.markdown(outline)
             
-            add_log(f"📊 Gliederung hat {len(outline.split('#'))} Hauptabschnitte")
+            add_log(f" Gliederung hat {len(outline.split('#'))} Hauptabschnitte")
             progress.progress(0.24)
         except Exception as e:
             add_log(f"❌ Fehler bei Gliederungserstellung: {str(e)}")
@@ -135,7 +140,7 @@ def generate_complete_article(topic, target_length=None):
         add_log("⏳ Generiere vollständigen Artikel-Inhalt...")
 
         if main.reference_information:
-            add_log("📊 Nutze zusätzliche Referenz-Informationen")
+            add_log(" Nutze zusätzliche Referenz-Informationen")
 
         complete_content = main.generate_complete_content(topic, outline, target_length)
         st.session_state.complete_article = complete_content
@@ -161,7 +166,7 @@ def generate_complete_article(topic, target_length=None):
         corrected_words = len(corrected_content.split())
         corrected_chars = len(corrected_content)
         add_log(f"✅ Rechtliche Prüfung abgeschlossen")
-        add_log(f"📊 Korrigierte Version: {corrected_words:,} Wörter, {corrected_chars:,} Zeichen")
+        add_log(f" Korrigierte Version: {corrected_words:,} Wörter, {corrected_chars:,} Zeichen")
         
         if complete_content == corrected_content:
             add_log("ℹ️ Keine rechtlichen Fehler gefunden")
@@ -176,7 +181,7 @@ def generate_complete_article(topic, target_length=None):
         add_log(f"🔍 Keywords verfügbar: {'Ja' if keywords_available else 'Nein'}")
         
         if keywords_available:
-            add_log(f"🔑 Anzahl Keywords: {len(st.session_state.seo_keywords)}")
+            add_log(f" Anzahl Keywords: {len(st.session_state.seo_keywords)}")
         
         # ------------------------------------------------------------------------
         # STEP 4: SEO INTEGRATION
@@ -196,10 +201,10 @@ def generate_complete_article(topic, target_length=None):
             seo_words = len(seo_optimized_content.split())
             
             add_log(f"✅ SEO-Integration abgeschlossen")
-            add_log(f"📊 SEO-Version: {seo_words:,} Wörter, {seo_length:,} Zeichen")
+            add_log(f" SEO-Version: {seo_words:,} Wörter, {seo_length:,} Zeichen")
             
-            with st.expander("🔑 Zeige SEO-Output (erste 1000 Zeichen)"):
-                st.markdown(seo_optimized_content[:1000] + "...")
+            with st.expander(" Zeige kompletten SEO-Output", expanded=True):
+                st.markdown(seo_optimized_content)
         else:
             add_log("ℹ️ Keine SEO-Keywords - verwende korrigierte Version")
             seo_optimized_content = corrected_content
@@ -219,10 +224,10 @@ def generate_complete_article(topic, target_length=None):
         humanized_words = len(humanized_content.split())
         humanized_chars = len(humanized_content)
         add_log(f"✅ Humanisierung abgeschlossen")
-        add_log(f"📊 Finale Version: {humanized_words:,} Wörter, {humanized_chars:,} Zeichen")
+        add_log(f" Finale Version: {humanized_words:,} Wörter, {humanized_chars:,} Zeichen")
         
-        with st.expander("👨🏼 Zeige Humanisierungs-Output (erste 1000 Zeichen)"):
-            st.markdown(humanized_content[:1000] + "...")
+        with st.expander("👨🏼 Zeige Humanisierungs-Output", expanded=True):
+            st.markdown(humanized_content)
         
         progress.progress(1.0)
         status.text("✅ Artikel erfolgreich erstellt!")
@@ -245,12 +250,12 @@ def display_complete_article():
     
     # Display outline if available
     if 'outline' in st.session_state:
-        with st.expander("📋 Gliederung anzeigen"):
+        with st.expander(" Gliederung anzeigen"):
             st.markdown(st.session_state.outline)
     
     # Display keywords if available
     if 'seo_keywords' in st.session_state and st.session_state.seo_keywords:
-        with st.expander("🔑 Verwendete SEO-Keywords anzeigen"):
+        with st.expander(" Verwendete SEO-Keywords anzeigen"):
             cols = st.columns(3)
             for i, keyword in enumerate(st.session_state.seo_keywords):
                 with cols[i % 3]:
@@ -270,12 +275,12 @@ def display_complete_article():
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader("📝 SEO-Optimiert (VORHER)")
+            st.subheader(" SEO-Optimiert (VORHER)")
             if 'seo_optimized_article' in st.session_state:
                 st.markdown(st.session_state.seo_optimized_article)
                 word_count = len(st.session_state.seo_optimized_article.split())
                 char_count = len(st.session_state.seo_optimized_article)
-                st.info(f"📊 {word_count:,} Wörter • {char_count:,} Zeichen")
+                st.info(f" {word_count:,} Wörter • {char_count:,} Zeichen")
         
         with col2:
             st.subheader("👨🏼 Humanisiert (NACHHER)")
@@ -283,21 +288,21 @@ def display_complete_article():
                 st.markdown(st.session_state.humanized_article)
                 word_count = len(st.session_state.humanized_article.split())
                 char_count = len(st.session_state.humanized_article)
-                st.info(f"📊 {word_count:,} Wörter • {char_count:,} Zeichen")
+                st.info(f" {word_count:,} Wörter • {char_count:,} Zeichen")
     
     # Tabbed view
     else:
-        tab1, tab2, tab3 = st.tabs(["👨🏼 Humanisierter Artikel (FINAL)", "📝 SEO-Version", "📄 Original"])
+        tab1, tab2, tab3 = st.tabs(["👨🏼 Humanisierter Artikel (FINAL)", " SEO-Version", "📄 Original"])
         
         with tab1:
             st.subheader("✍️ Humanisierter Artikel (Final)")
             if 'humanized_article' in st.session_state:
                 st.markdown(st.session_state.humanized_article)
                 word_count = len(st.session_state.humanized_article.split())
-                st.info(f"📊 {word_count:,} Wörter")
+                st.info(f" {word_count:,} Wörter")
         
         with tab2:
-            st.subheader("📝 SEO-Optimierte Version")
+            st.subheader(" SEO-Optimierte Version")
             if 'seo_optimized_article' in st.session_state:
                 st.markdown(st.session_state.seo_optimized_article)
         
@@ -366,15 +371,15 @@ def sidebar_info():
             st.sidebar.write(f"⏳ {step_name}")
     
     # Reference status
-    st.sidebar.subheader("📋 Referenz Status")
+    st.sidebar.subheader(" Referenz Status")
     st.sidebar.write("📄 Standard-Ton aktiv (Körperverletzung)")
     
     if main.reference_information:
-        st.sidebar.write("📊 Zusätzliche Rechtsinformationen verfügbar")
+        st.sidebar.write(" Zusätzliche Rechtsinformationen verfügbar")
     
     # SEO keywords display
     if 'seo_keywords' in st.session_state and st.session_state.seo_keywords:
-        st.sidebar.subheader("🔑 SEO-Keywords")
+        st.sidebar.subheader(" SEO-Keywords")
         for kw in st.session_state.seo_keywords[:5]:
             st.sidebar.write(f"• {kw}")
         if len(st.session_state.seo_keywords) > 5:
@@ -382,7 +387,7 @@ def sidebar_info():
     
     # Article statistics
     if 'humanized_article' in st.session_state:
-        st.sidebar.subheader("📊 Artikel-Info")
+        st.sidebar.subheader(" Artikel-Info")
         word_count = len(st.session_state.humanized_article.split())
         st.sidebar.write(f"Wörter: {word_count:,}")
         st.sidebar.write(f"Zeichen: {len(st.session_state.humanized_article):,}")
@@ -399,9 +404,9 @@ def sidebar_info():
 # MAIN APPLICATION
 # ============================================================================
 def main_app():
-    st.title("⚖️ Legal SEO Content Generator")
+    st.title(" Legal SEO Content Generator")
     
-    tab1, tab2 = st.tabs(["📝 Artikel Generator", "🖼️ Bild Generator"])
+    tab1, tab2, tab3 = st.tabs(["📝 Artikel Generator", "🖼️ Bild Generator", "🤖 Agent Settings"])
     
     # ========================================================================
     # TAB 1: ARTICLE GENERATOR
@@ -410,7 +415,7 @@ def main_app():
         # --------------------------------------------------------------------
         # STEP 1: TOPIC & SEO KEYWORDS
         # --------------------------------------------------------------------
-        st.header("📋 Schritt 1: Topic & SEO-Keywords")
+        st.header(" Schritt 1: Topic & SEO-Keywords")
         
         topic = st.text_input(
             "Bitte geben Sie das juristische Thema ein:",
@@ -422,7 +427,7 @@ def main_app():
             st.session_state.topic = topic
         
         # SEO Keywords section
-        st.subheader("🔑 SEO-Keywords Generierung")
+        st.subheader(" SEO-Keywords Generierung")
 
         # Remember user settings
         use_different_keyword_topic = st.checkbox(
@@ -472,7 +477,7 @@ def main_app():
         # Display and allow selection of keywords
         if 'seo_keywords_all' in st.session_state:
             st.success(f"✅ {len(st.session_state.seo_keywords_all)} SEO-Keywords erfolgreich generiert!")
-            st.subheader("🔑 Generierte SEO-Keywords - Wählen Sie aus:")
+            st.subheader(" Generierte SEO-Keywords - Wählen Sie aus:")
             
             cols = st.columns(2)
             for i, keyword in enumerate(st.session_state.seo_keywords_all):
@@ -497,7 +502,7 @@ def main_app():
         # --------------------------------------------------------------------
         # STEP 2: REFERENCE INFORMATION (OPTIONAL)
         # --------------------------------------------------------------------
-        st.header("📊 Schritt 2: Referenz-Information (Optional)")
+        st.header(" Schritt 2: Referenz-Information (Optional)")
         st.write("*Quelle für relevante Rechtsinformationen*")
 
         use_ref_info = st.radio(
@@ -516,13 +521,13 @@ def main_app():
             )
             
             if ref_info_source and ref_info_source.strip():
-                if st.button("📊 Referenz-Information analysieren", key="analyze_ref_info"):
+                if st.button(" Referenz-Information analysieren", key="analyze_ref_info"):
                     process_reference_info(ref_info_source, topic)
         
         # --------------------------------------------------------------------
         # STEP 3: CONTENT GENERATION
         # --------------------------------------------------------------------
-        st.header("📝 Schritt 3: Content-Generierung")
+        st.header(" Schritt 3: Content-Generierung")
 
         # Optional article length control
         with st.expander("⚙️ Artikellänge Option (Optional)"):
@@ -567,7 +572,7 @@ def main_app():
         st.divider()
         
         # Button 1: Generate Outline
-        if st.button("📋 Gliederung generieren", type="primary", use_container_width=True, key="gen_outline"):
+        if st.button(" Gliederung generieren", type="primary", use_container_width=True, key="gen_outline"):
             with st.spinner("Generiere Gliederung..."):
                 outline = main.generate_outline(topic)
                 st.session_state.generated_outline = outline
@@ -775,7 +780,211 @@ def main_app():
                 except:
                     st.error("Download fehlgeschlagen")
             
+    # ========================================================================
+    # TAB 3: AGENT SETTINGS
+    # ========================================================================
+    with tab3:
+        st.header("🤖 AI Agent Einstellungen")
+        st.write("Verwalten Sie die KI-Modelle, die für Content-Generierung verwendet werden.")
+        
+        # --------------------------------------------------------------------
+        # SHOW CURRENTLY USED MODEL (NEW - AT THE TOP)
+        # --------------------------------------------------------------------
+        st.success("✅ **Aktuell verwendetes Modell:**")
+        try:
+            if not hasattr(st.session_state, 'displayed_auto_model'):
+                auto_model = pick_strongest_model(claude_client)
+                st.session_state.displayed_auto_model = auto_model
+            
+            current_model = st.session_state.get('confirmed_model', st.session_state.get('displayed_auto_model'))
+            
+            if current_model:
+                # Detect family
+                model_lower = current_model.lower()
+                if 'sonnet' in model_lower:
+                    family_emoji = "🎯"
+                    family_name = "Sonnet"
+                elif 'opus' in model_lower:
+                    family_emoji = "🔥"
+                    family_name = "Opus"
+                elif 'haiku' in model_lower:
+                    family_emoji = "⚡"
+                    family_name = "Haiku"
+                else:
+                    family_emoji = "🤖"
+                    family_name = "Unknown"
+                
+                st.code(current_model, language=None)
+                
+                if 'confirmed_model' in st.session_state:
+                    st.caption(f"{family_emoji} **{family_name}** (Manuell ausgewählt)")
+                else:
+                    st.caption(f"{family_emoji} **{family_name}** (Automatisch ausgewählt)")
+        
+        except Exception as e:
+            st.error(f"Fehler beim Laden: {str(e)}")
+        
+        st.divider()
+        
+        # --------------------------------------------------------------------
+        # MODEL FAMILY SELECTION
+        # --------------------------------------------------------------------
+        st.subheader("🤖 Modell-Familie wählen")
+        
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            model_family = st.selectbox(
+                "Wählen Sie die bevorzugte Modell-Familie:",
+                options=["sonnet", "opus", "haiku"],
+                index=0,  # Default to Sonnet
+                format_func=lambda x: {
+                    "sonnet": "🎯 Claude Sonnet (Empfohlen - Balance aus Qualität & Geschwindigkeit)",
+                    "opus": "🔥 Claude Opus (Höchste Qualität, langsamer & teurer)",
+                    "haiku": "⚡ Claude Haiku (Schnell & günstig, geringere Qualität)"
+                }[x],
+                key="model_family_selection"
+            )
+        
+        with col2:
+            st.write("")  # Spacing
+            st.write("")  # Spacing
+            confirm_button = st.button("✅ Bestätigen", use_container_width=True, type="primary")
+        
+        # Display model family info
+        family_info = {
+            "sonnet": {
+                "icon": "🎯",
+                "name": "Claude Sonnet",
+                "description": "Optimal für professionelle Rechtstexte. Beste Balance zwischen Qualität, Geschwindigkeit und Kosten.",
+                "use_case": "Empfohlen für: SEO-Artikel, rechtliche Analysen, Content-Generierung",
+                "cost": "€3 pro 1M Tokens"
+            },
+            "opus": {
+                "icon": "🔥",
+                "name": "Claude Opus",
+                "description": "Höchste verfügbare Qualität. Beste Performance bei komplexen rechtlichen Aufgaben.",
+                "use_case": "Empfohlen für: Komplexe rechtliche Gutachten, präzise Analysen",
+                "cost": "€15 pro 1M Tokens (5x teurer als Sonnet)"
+            },
+            "haiku": {
+                "icon": "⚡",
+                "name": "Claude Haiku",
+                "description": "Schnellste und günstigste Option. Gut für einfache Aufgaben.",
+                "use_case": "Empfohlen für: Einfache Texte, schnelle Entwürfe",
+                "cost": "€0.25 pro 1M Tokens"
+            }
+        }
+        
+        info = family_info[model_family]
+        
+        st.info(f"""
+        **{info['icon']} {info['name']}**
+        
+        {info['description']}
+        
+        **{info['use_case']}**
+        
+        💰 Kosten: {info['cost']}
+        """)
+        
+        # --------------------------------------------------------------------
+        # CONFIRM AND FETCH MODEL
+        # --------------------------------------------------------------------
+        if confirm_button:
+            with st.spinner(f"Suche neuestes {model_family.capitalize()}-Modell..."):
+                try:
+                    # Import temporarily to get specific family
+                    import re
+                    
+                    def pick_strongest_in_family(client, family):
+                        """Pick strongest model from specific family"""
+                        try:
+                            raw = client.models.list()
+                        except Exception as e:
+                            raise RuntimeError(f"Failed to fetch models: {e}")
+                        
+                        ids = []
+                        for item in raw:
+                            mid = getattr(item, "id", None) or (item.get("id") if isinstance(item, dict) else item)
+                            if isinstance(mid, str):
+                                ids.append(mid)
+                        
+                        if not ids:
+                            raise RuntimeError("No models returned by API.")
+                        
+                        # Filter for selected family
+                        family_models = [m for m in ids if family.lower() in m.lower()]
+                        
+                        if not family_models:
+                            raise RuntimeError(f"No {family} models available.")
+                        
+                        def extract_date(model_id: str) -> int:
+                            m = re.search(r'(\d{8})', model_id)
+                            return int(m.group(1)) if m else 0
+                        
+                        # Sort by date, newest first
+                        best = sorted(family_models, key=extract_date, reverse=True)[0]
+                        return best
+                    
+                    selected_model = pick_strongest_in_family(claude_client, model_family)
+                    
+                    # Save to session state
+                    st.session_state.confirmed_model = selected_model
+                    st.session_state.confirmed_family = model_family
+                    
+                    st.success(f"✅ Modell erfolgreich ausgewählt!")
+                    st.rerun()
+                    
+                except Exception as e:
+                    st.error(f"❌ Fehler beim Abrufen des Modells: {str(e)}")
+        
+        # --------------------------------------------------------------------
+        # DISPLAY CONFIRMED MODEL
+        # --------------------------------------------------------------------
+        if 'confirmed_model' in st.session_state:
+            st.divider()
+            st.subheader("✅ Aktuell aktives Modell")
+            
+            col1, col2 = st.columns([3, 1])
+            
+            with col1:
+                st.code(st.session_state.confirmed_model, language=None)
+                st.write(f"**Familie:** {st.session_state.confirmed_family.capitalize()}")
+                st.write("**Status:** ✅ Aktiv und bereit für Content-Generierung")
+            
+            with col2:
+                if st.button("🔄 Zurücksetzen", use_container_width=True):
+                    del st.session_state.confirmed_model
+                    del st.session_state.confirmed_family
+                    st.rerun()
+        
 
+        
+        # --------------------------------------------------------------------
+        # MODEL USAGE INFO
+        # --------------------------------------------------------------------
+        st.divider()
+        st.subheader("ℹ️ Wie funktioniert die automatische Modell-Auswahl?")
+        
+        with st.expander("📖 Details anzeigen"):
+            st.markdown("""
+            **Automatische Modell-Aktualisierung:**
+            
+            Das System wählt automatisch die **neueste verfügbare Version** aus der gewählten Modell-Familie:
+            
+            - 🎯 **Sonnet:** Wählt neueste Sonnet-Version (z.B. Claude Sonnet 4.5, später automatisch 5.0)
+            - 🔥 **Opus:** Wählt neueste Opus-Version
+            - ⚡ **Haiku:** Wählt neueste Haiku-Version
+            
+            **Vorteile:**
+            - ✅ Immer neueste KI-Technologie ohne manuelles Update
+            - ✅ Automatische Verbesserungen bei neuen Releases
+            - ✅ Keine Code-Änderungen notwendig
+            
+            **Hinweis:** Das System priorisiert immer die gewählte Familie. 
+            Wenn Sie Sonnet wählen, wird niemals auf Opus oder Haiku gewechselt.
+            """)
 # ============================================================================
 # APPLICATION ENTRY POINT
 # ============================================================================

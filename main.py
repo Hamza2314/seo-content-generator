@@ -6,10 +6,11 @@ import requests
 from urllib.parse import urlparse
 from generator import get_seo_keywords_for_topic
 from prompts_and_texts import REFERENCE_TONE_TEXT, CLIENT_INTRO_EXAMPLE
+from pick_strongest_model import pick_strongest_model
 
 load_dotenv()
 client = anthropic.Anthropic(api_key=os.getenv("CLAUDE_API_KEY"))
-
+CLAUDE_MODEL = pick_strongest_model(client)
 # Global variables to store reference data and SEO data
 reference_information = None
 reference_style = REFERENCE_TONE_TEXT  # Hardcoded reference tone
@@ -92,7 +93,7 @@ Gib NUR die relevanten Rechtsinformationen zurück, die für das Schreiben von R
     
     try:
         response = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model=CLAUDE_MODEL,
             max_tokens=2000,
             temperature=0.2,
             messages=[{"role": "user", "content": prompt}]
@@ -127,7 +128,7 @@ Beispiel:
 """
     
     response = client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model=CLAUDE_MODEL,
         max_tokens=2500,
         temperature=0.4,
         messages=[{"role": "user", "content": base_prompt}]
@@ -201,7 +202,7 @@ REFERENZTEXT:
     print("Starte Content-Generierung mit Streaming...")
     try:
         with client.messages.stream(
-            model="claude-sonnet-4-20250514",
+            model=CLAUDE_MODEL,
             max_tokens=15000,
             temperature=0.4,
             messages=[{"role": "user", "content": base_prompt}]
@@ -222,7 +223,7 @@ REFERENZTEXT:
         print(f"[ERROR] Content generation failed: {e}")
         # Fallback to non-streaming if streaming fails
         response = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model=CLAUDE_MODEL,
             max_tokens=20000,
             temperature=0.4,
             messages=[{"role": "user", "content": base_prompt}]
@@ -273,7 +274,7 @@ Gib nur den korrigierten Text zurück:
     try:
         print("Starte rechtliche Prüfung (Streaming)...")
         with client.messages.stream(
-            model="claude-sonnet-4-20250514",
+            model=CLAUDE_MODEL,
             max_tokens=30000,
             temperature=0.3,
             messages=[{"role": "user", "content": prompt}]
@@ -336,7 +337,7 @@ Gib NUR den überarbeiteten Text zurück, ohne Erklärungen:
     
     try:
         with client.messages.stream(
-            model="claude-sonnet-4-20250514",
+            model=CLAUDE_MODEL,
             max_tokens=30000,
             temperature=0.5,
             messages=[{"role": "user", "content": prompt}]
@@ -419,7 +420,7 @@ Gib NUR den überarbeiteten Text zurück:
     
     try:
         with client.messages.stream(
-            model="claude-sonnet-4-20250514",
+            model=CLAUDE_MODEL,
             max_tokens=30000,
             temperature=0.80 if deep_mode else 0.75,
             messages=[{"role": "user", "content": prompt}]
